@@ -44,9 +44,9 @@ router.post("/manual", async (req, res) => {
     // 🔔 SEND NOTIFICATION
    if (shouldSend) {
   await sendNotification(
-    title,                      
-    "",                         
-    imageUrl || "https://i.imgur.com/3GvwNBf.png"  
+    title,
+    "",
+    imageUrl || "https://images.unsplash.com/photo-1504711434969-e33886168f5c"
   );
 }
 
