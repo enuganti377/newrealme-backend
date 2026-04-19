@@ -42,9 +42,13 @@ router.post("/manual", async (req, res) => {
     });
 
     // 🔔 SEND NOTIFICATION
-    if (shouldSend) {
-      await sendNotification(title,imageUrl);
-    }
+   if (shouldSend) {
+  await sendNotification(
+    title,                      
+    "",                         
+    imageUrl || "https://i.imgur.com/3GvwNBf.png"  
+  );
+}
 
     res.json(news);
 
