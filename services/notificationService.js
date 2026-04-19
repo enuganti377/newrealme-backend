@@ -1,24 +1,29 @@
 const admin = require("../config/firebase");
-const { tokens } = require("../routes/notificationRoutes");
+const Token = require("../models/Token");
 
 const sendNotification = async (title, body) => {
   try {
-    for (let token of tokens) {
-      const message = {
-        token: token,   
-        notification: {
-          title,
-          body,
-        },
-      };
+    const tokensData = await Token.find();
+    const tokens = tokensData.map((t) => t.token);
 
-      await admin.messaging().send(message);
+    if (tokens.length === 0) {
+      console.log("No tokens found");
+      return;
     }
 
-    console.log("Notification sent to all users");
+    const message = {
+      notification: {
+        title,
+        body,
+      },
+      tokens: tokens,
+    };
 
+    const response = await admin.messaging().sendEachForMulticast(message);
+
+    console.log("Notification sent:", response);
   } catch (err) {
-    console.error("Notification error:", err);
+    console.log("Notification error:", err);
   }
 };
 
