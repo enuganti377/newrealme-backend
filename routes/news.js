@@ -65,113 +65,47 @@ router.get("/feed", async (req, res) => {
   try {
     let { location, mandal, category, page = 1, limit = 10, afterTime } = req.query;
 
-    page = parseInt(page);
-    limit = parseInt(limit);
+    page = parseInt(page) || 1;
+    limit = parseInt(limit) || 10;
 
-    // ======================
-    // NORMALIZE INPUT
-    // ======================
+    // normalize input
     location = location ? location.trim().toLowerCase() : null;
     mandal = mandal ? mandal.trim().toLowerCase() : null;
     category = category ? category.trim().toLowerCase() : null;
 
-    // ======================
-    // BASE FILTER
-    // ======================
-    let filter = {
-      ...(category && category !== "all" ? { category } : {})
-    };
+    // base filter
+    let filter = {};
 
-    // 🔥 NEW NEWS SUPPORT
+    if (category && category !== "all") {
+      filter.category = category;
+    }
+
+    if (location) {
+      filter.location = location;
+    }
+
+    if (mandal) {
+      filter.mandal = mandal;
+    }
+
+    // new news support
     if (afterTime) {
       filter.publishedAt = { $gt: new Date(afterTime) };
     }
 
-    // ======================
-    // FETCH ALL NEWS (LATEST FIRST)
-    // ======================
-    const allNews = await News.find(filter).sort({ publishedAt: -1 });
+    // ✅ DB LEVEL PAGINATION (FAST)
+    const news = await News.find(filter)
+      .sort({ publishedAt: -1 }) // latest first
+      .skip((page - 1) * limit)
+      .limit(limit);
 
-    // ======================
-    // PRIORITY LOGIC
-    // ======================
-    const prioritized = allNews.map((item) => {
-      let priority = 3;
-
-      if (
-        item.isManual &&
-        mandal &&
-        item.mandal &&
-        item.mandal.toLowerCase().trim() === mandal
-      ) {
-        priority = 1;
-      } else if (
-        item.isManual &&
-        location &&
-        item.location &&
-        item.location.toLowerCase().trim() === location
-      ) {
-        priority = 2;
-      }
-
-      return { ...item._doc, priority };
-    });
-
-    // ======================
-    // SORT BY PRIORITY + LATEST
-    // ======================
-    prioritized.sort((a, b) => {
-      if (a.priority !== b.priority) {
-        return a.priority - b.priority;
-      }
-      return new Date(b.publishedAt) - new Date(a.publishedAt);
-    });
-
-    // ======================
-    // SPLIT DATA
-    // ======================
-    const rssNews = prioritized.filter(item => !item.isManual);
-    const manualNews = prioritized.filter(item => item.isManual);
-
-    // ======================
-    // APPLY GLOBAL PATTERN (2 RSS + 1 LOCAL)
-    // ======================
-    let mixed = [];
-    let r = 0;
-    let m = 0;
-
-    while (r < rssNews.length || m < manualNews.length) {
-      // 🔥 2 RSS
-      for (let i = 0; i < 2 && r < rssNews.length; i++) {
-        mixed.push(rssNews[r++]);
-      }
-
-      // 🔥 1 LOCAL
-      if (m < manualNews.length) {
-        mixed.push(manualNews[m++]);
-      }
-    }
-
-    // ======================
-    // PAGINATION (IMPORTANT)
-    // ======================
-    const start = (page - 1) * limit;
-    const end = start + limit;
-
-    const finalFeed = mixed.slice(start, end);
-
-    // ======================
-    // RESPONSE
-    // ======================
-    res.json(finalFeed);
+    res.json(news);
 
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
-
-
 // ======================
 // GET SINGLE NEWS
 // ======================
