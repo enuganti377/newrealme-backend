@@ -38,7 +38,7 @@ app.use("/api/ntv",NTVRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/cat",catRoutes);
 app.use("/api/ping",pingRoutes );
-app.use("/api/notification", notificationRoutes);
+app.use("/api/notification", notificationRoutes.router);
 
 
 
