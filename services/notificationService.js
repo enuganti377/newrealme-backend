@@ -1,9 +1,8 @@
 const admin = require("../config/firebase");
 const Token = require("../models/Token");
 
-const sendNotification = async (title, imageUrl) => {
+const sendNotification = async (title, body, imageUrl) => {
   try {
-    // 1. Get all tokens from DB
     const tokensData = await Token.find();
     const tokens = tokensData.map((t) => t.token);
 
@@ -12,29 +11,30 @@ const sendNotification = async (title, imageUrl) => {
       return;
     }
 
-    // 2. Create clean notification payload
     const message = {
+      tokens: tokens,
+
       notification: {
         title: title,
-        body: "", // 🔥 keep empty for clean UI
-        imageUrl: imageUrl, // 🔥 big image
+        body: body,
       },
 
       android: {
         notification: {
-          channelId: "news",
+          channelId: "default",
+
+          // IMPORTANT → must match file name (notification-icon.png → notification_icon)
+          smallIcon: "notification_icon",
+
+          // BIG IMAGE (expanded view)
+          imageUrl: imageUrl,
+
           priority: "high",
-          imageUrl: imageUrl, // 🔥 required for Android image
         },
       },
-
-      tokens: tokens,
     };
 
-    // 3. Send notification
-    const response = await admin
-      .messaging()
-      .sendEachForMulticast(message);
+    const response = await admin.messaging().sendEachForMulticast(message);
 
     console.log("Notification sent:", response);
   } catch (err) {
