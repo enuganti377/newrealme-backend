@@ -1,22 +1,29 @@
 const express = require("express");
 const router = express.Router();
+const Token = require("../models/Token");
 
-const notificationController = require("../controllers/notificationController");
+router.post("/save-token", async (req, res) => {
+  try {
+    const { token } = req.body;
 
-let tokens = [];
+    if (!token) {
+      return res.status(400).json({ error: "Token required" });
+    }
 
-router.post("/save-token", (req, res) => {
-  const { token } = req.body;
+    const exists = await Token.findOne({ token });
 
-  if (!tokens.includes(token)) {
-    tokens.push(token);
+    if (!exists) {
+      await Token.create({ token });
+      console.log("New token saved:", token);
+    } else {
+      console.log("Token already exists");
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: err.message });
   }
-
-  console.log("TOKENS:", tokens);
-
-  res.json({ success: true });
 });
 
-router.post("/send", notificationController.send);
-
-module.exports = { router, tokens };
+module.exports = { router };
