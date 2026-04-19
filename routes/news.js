@@ -43,7 +43,7 @@ router.post("/manual", async (req, res) => {
 
     // 🔔 SEND NOTIFICATION
     if (shouldSend) {
-      await sendNotification(" title,imageUrl);
+      await sendNotification(title,imageUrl);
     }
 
     res.json(news);
