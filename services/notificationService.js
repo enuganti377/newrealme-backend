@@ -16,20 +16,13 @@ const sendNotification = async (title, body, imageUrl) => {
 
       notification: {
         title: title,
-        body: body,
+        body: body || " ",
       },
 
       android: {
         notification: {
-          channelId: "default",
-
-          // IMPORTANT → must match file name (notification-icon.png → notification_icon)
-          smallIcon: "notification_icon",
-
-          // BIG IMAGE (expanded view)
-          imageUrl: imageUrl,
-
           priority: "high",
+          imageUrl: imageUrl, // image will show when expanded
         },
       },
     };
